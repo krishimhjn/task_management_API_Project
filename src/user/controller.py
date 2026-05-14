@@ -80,7 +80,7 @@ def is_authenticated(request:Request,db:Session):
 
             return user
         except InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you are unuuthhorized")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="youu are unuuthhorized")
 
 
 def get_all_users(db:Session):
