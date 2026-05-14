@@ -7,5 +7,11 @@ from src.user.router import user_routes
 # Base.metadata.create_all(engine)
 
 app=FastAPI(title="This is my task management app")
+
+@app.get("/")
+def root():
+    return {"message": "Task Management API is running"}
+
+
 app.include_router(task_routes)
 app.include_router(user_routes)
