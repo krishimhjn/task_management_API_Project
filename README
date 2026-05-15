@@ -1,0 +1,216 @@
+# 📝 Task Management API
+
+A RESTful API built with **FastAPI** and **PostgreSQL** for managing personal tasks with user authentication And role based authentication.
+
+---
+
+## 🚀 Features
+
+- User registration and login with JWT authentication
+- Admin registration and login with JWT authentication
+- Secure password hashing using Argon2
+- Full CRUD operations for tasks
+- Each user can only access their own tasks
+- Admin can see everyone's task and make changes in them
+- Database migrations with Alembic
+- Input validation with Pydantic
+- Response Model for secutiry
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Python 3.10+ | Core language |
+| FastAPI | Web framework |
+| PostgreSQL | Database |
+| SQLAlchemy | ORM |
+| Alembic | Database migrations |
+| JWT (PyJWT) | Authentication |
+| Argon2 (pwdlib) | Password hashing |
+| Pydantic | Data validation |
+| Uvicorn | ASGI server |
+
+---
+
+## 📁 Project Structure
+
+```
+project/
+│
+├── main.py                  # App entry point
+├── requirements.txt
+├── alembic.ini
+├── Procfile
+├── .env
+│
+└── src/
+    ├── tasks/
+    │   ├── models.py        # Task DB model
+    │   ├── dtos.py          # Request/Response schemas
+    │   ├── controller.py    # Business logic
+    │   └── router.py        # API routes
+    │
+    ├── user/
+    │   ├── models.py        # User DB model
+    │   ├── dtos.py          # Request/Response schemas
+    │   ├── controller.py    # Auth logic
+    │   └── router.py        # API routes
+    │
+    └── utils/
+        ├── db.py            # DB connection & session
+        ├── settings.py      # Environment config
+        └── helpers.py       # Auth dependency helper
+```
+
+---
+
+## ⚙️ Setup & Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/task-management-api.git
+cd task-management-api
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv venv
+source venv/bin/activate        # On Windows: venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL=postgresql://your_user:your_password@localhost:5432/your_db_name
+SECRET_KEY=your_secret_key_here
+ALGORITHM=HS256
+```
+
+### 5. Run database migrations
+
+```bash
+alembic upgrade head
+```
+
+### 6. Start the server
+
+```bash
+uvicorn main:app --reload
+```
+
+The API will be running at `http://localhost:8000`
+
+---
+
+## 📌 API Endpoints
+
+### Auth / User
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| POST | `/user/register` | Register a new user | ❌ |
+| POST | `/user/login` | Login and get JWT token | ❌ |
+| GET | `/user/is_auth` | Check if token is valid | ✅ |
+| GET | `/user/all_users` | Get all users | ❌ |
+
+### Tasks
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| POST | `/tasks/create` | Create a new task | ✅ |
+| GET | `/tasks/all_task` | Get all tasks for logged-in user | ✅ |
+| GET | `/tasks/get_task_byid/{id}` | Get a task by ID | ✅ |
+| PUT | `/tasks/update_task/{task_id}` | Update a task | ✅ |
+| DELETE | `/tasks/delete_task/{task_id}` | Delete a task | ✅ |
+
+---
+
+## 🔐 Authentication
+
+This API uses **Bearer Token** authentication.
+
+1. Register a user via `POST /user/register`
+2. Login via `POST /user/login` — you will receive a token
+3. Pass the token in the `Authorization` header for protected routes:
+
+```
+Authorization: Bearer <your_token_here>
+```
+
+---
+
+## 📬 Example Requests
+
+### Register
+
+```json
+POST /user/register
+{
+  "name": "John Doe",
+  "username": "johndoe",
+  "password": "securepassword",
+  "email": "john@example.com",
+  "user_role": "user"
+}
+```
+
+### Login
+
+```json
+POST /user/login
+{
+  "username": "johndoe",
+  "password": "securepassword"
+}
+```
+
+### Create Task
+
+```json
+POST /tasks/create
+Authorization: Bearer <token>
+
+{
+  "title": "Buy groceries",
+  "description": "Milk, eggs, bread",
+  "is_completed": false
+}
+```
+
+---
+
+## 📖 Interactive API Docs
+
+FastAPI provides auto-generated documentation:
+
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+---
+
+## 🌐 Deployment
+
+This project includes a `Procfile` for deployment on platforms like **Railway** or **Heroku**:
+
+```
+web: uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+---
+
+## 🙋‍♂️ Author
+
+**Your Name**  
+[GitHub](https://github.com/your-username) • [LinkedIn](https://linkedin.com/in/your-profile)
