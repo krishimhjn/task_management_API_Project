@@ -1,8 +1,13 @@
 # 📝 Task Management API
 
+**TEST THE API HERE**
+https://taskmanagementapiproject-production.up.railway.app/docs
+
+
 A RESTful API built with **FastAPI** and **PostgreSQL** for managing personal tasks with user authentication And role based authentication.
 
 ---
+
 
 ## 🚀 Features
 
@@ -71,8 +76,8 @@ project/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/task-management-api.git
-cd task-management-api
+git clone https://github.com/krishimhjn/task_management_API_Project.git
+cd task_management_API_Project
 ```
 
 ### 2. Create a virtual environment
@@ -91,7 +96,7 @@ pip install -r requirements.txt
 ### 4. Configure environment variables
 
 Create a `.env` file in the root directory:
-
+***You need to set up postgre Databse in you system***
 ```env
 DATABASE_URL=postgresql://your_user:your_password@localhost:5432/your_db_name
 SECRET_KEY=your_secret_key_here
@@ -158,10 +163,10 @@ Authorization: Bearer <your_token_here>
 ```json
 POST /user/register
 {
-  "name": "John Doe",
-  "username": "johndoe",
-  "password": "securepassword",
-  "email": "john@example.com",
+  "name": "Krishi_Mahajan",
+  "username": "krishi_mhjn",
+  "password": "krishi@123",
+  "email": "krishimhjn@gmail.com",
   "user_role": "user"
 }
 ```
@@ -171,8 +176,8 @@ POST /user/register
 ```json
 POST /user/login
 {
-  "username": "johndoe",
-  "password": "securepassword"
+  "username": "Krishi_Mahajan",
+  "password": "krishi@132"
 }
 ```
 
@@ -180,29 +185,21 @@ POST /user/login
 
 ```json
 POST /tasks/create
-Authorization: Bearer <token>
+
+Authorization: jwt <token>
 
 {
   "title": "Buy groceries",
   "description": "Milk, eggs, bread",
   "is_completed": false
 }
-```
 
----
 
-## 📖 Interactive API Docs
 
-FastAPI provides auto-generated documentation:
-
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-
----
 
 ## 🌐 Deployment
 
-This project includes a `Procfile` for deployment on platforms like **Railway** or **Heroku**:
+My project includes a `Procfile` for deployment on platforms like **Railway** :
 
 ```
 web: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -212,5 +209,5 @@ web: uvicorn main:app --host 0.0.0.0 --port $PORT
 
 ## 🙋‍♂️ Author
 
-**Your Name**  
+**Krishi Mahajan**  
 [GitHub](https://github.com/your-username) • [LinkedIn](https://linkedin.com/in/your-profile)
