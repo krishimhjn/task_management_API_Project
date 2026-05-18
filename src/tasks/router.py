@@ -23,6 +23,8 @@ def get_all_tasks(db:Session=Depends(get_db),user:UserModel=Depends(is_authentic
 def get_task_byid(id:int,db:Session=Depends(get_db),user:UserModel=Depends(is_authenticated)):
     return controller.get_task_byid(id,db)
 
+# is put route update_task controller me ek token aya hoga Jwt ka 
+# usme user id hogi us user id ko fetch karke depends(is_authenticated) kam karega
 
 @task_routes.put("/update_task/{task_id}")
 def update_task(body:TaskSchema,task_id:int,db:Session=Depends(get_db),user:UserModel=Depends(is_authenticated)):
