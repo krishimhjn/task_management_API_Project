@@ -7,8 +7,7 @@ import jwt
 from src.utils.settings import settings
 from datetime import datetime,timedelta
 from jwt.exceptions import InvalidTokenError
-
-
+from src.utils.mail import send_email
 
 password_hash=PasswordHash.recommended()
 EXP_TIME=30
@@ -41,6 +40,9 @@ def register(body:UserSchema,db:Session):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    # send email confirmation
+    res=send_email([new_user.email])
+    print(res)
     return new_user
 
 

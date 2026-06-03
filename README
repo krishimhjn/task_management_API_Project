@@ -11,6 +11,7 @@ To test Role Based Authentication
 To check how Respose Schema is working
 
 Step 2: you can register yourself first and than get yourself logged in , use the genrated JWT token to get Authorized and test , use the APIs
+
 ---
 
 
@@ -215,4 +216,3 @@ web: uvicorn main:app --host 0.0.0.0 --port $PORT
 ## 🙋‍♂️ Author
 
 **Krishi Mahajan**  
-[GitHub](https://github.com/your-username) • [LinkedIn](https://linkedin.com/in/your-profile)
