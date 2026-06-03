@@ -19,7 +19,7 @@ def get_password_hash(password):
 def verify_password(plain_password,hashed_password):
     return password_hash.verify(plain_password,hashed_password)
 
-def register(body:UserSchema,db:Session):
+async def register(body:UserSchema,db:Session):
     is_user=db.query(UserModel).filter(UserModel.username==body.username).first()
     if is_user:
         raise HTTPException(400,detail="username Already exist..")
@@ -41,7 +41,7 @@ def register(body:UserSchema,db:Session):
     db.commit()
     db.refresh(new_user)
     # send email confirmation
-    res=send_email([new_user.email])
+    res=await send_email([new_user.email])
     print(res)
     return new_user
 
