@@ -6,10 +6,11 @@ https://taskmanagementapiproject-production.up.railway.app/docs
 
 A RESTful API built with **FastAPI** and **PostgreSQL** for managing personal tasks with user authentication And role based authentication.
 
-user/all_users path is open for everyone to test the project 
+Step 1: user/all_users path is open for everyone to test the project 
 To test Role Based Authentication
 To check how Respose Schema is working
 
+Step 2: you can register yourself first and than get yourself logged in , use the genrated JWT token to get Authorized and test , use the APIs
 ---
 
 
