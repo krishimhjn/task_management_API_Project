@@ -1,90 +1,176 @@
-from src.user.dtos import UserSchema,LoginSchema
+from src.user.dtos import UserSchema, LoginSchema
 from sqlalchemy.orm import Session
 from src.user.models import UserModel
-from fastapi import HTTPException,status,Request
+from fastapi import HTTPException, status, Request
 from pwdlib import PasswordHash
 import jwt
 from src.utils.settings import settings
-from datetime import datetime,timedelta
-from jwt.exceptions import InvalidTokenError
+from datetime import datetime, timedelta
+from jwt import ExpiredSignatureError, InvalidTokenError
 from src.utils.mail import send_email
 
-password_hash=PasswordHash.recommended()
-EXP_TIME=30
+password_hash = PasswordHash.recommended()
+EXP_TIME = 40
 
 
-def get_password_hash(password):
+def get_password_hash(password: str):
     return password_hash.hash(password)
 
-def verify_password(plain_password,hashed_password):
-    return password_hash.verify(plain_password,hashed_password)
 
-async def register(body:UserSchema,db:Session):
-    is_user=db.query(UserModel).filter(UserModel.username==body.username).first()
-    if is_user:
-        raise HTTPException(400,detail="username Already exist..")
-    is_user=db.query(UserModel).filter(UserModel.email==body.email).first()
-    if is_user:
-        raise HTTPException(400,detail="emailaddress Already exist..")
-    
+def verify_password(plain_password: str, hashed_password: str):
+    return password_hash.verify(plain_password, hashed_password)
 
-    hash_password=get_password_hash(body.password)
-    new_user=UserModel(
-        
+
+async def register(body: UserSchema, db: Session):
+    # Check username
+    is_user = (
+        db.query(UserModel)
+        .filter(UserModel.username == body.username)
+        .first()
+    )
+
+    if is_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
+        )
+
+    # Check email
+    is_user = (
+        db.query(UserModel)
+        .filter(UserModel.email == body.email)
+        .first()
+    )
+
+    if is_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already exists",
+        )
+
+    hash_password = get_password_hash(body.password)
+
+    new_user = UserModel(
         name=body.name,
         username=body.username,
         hash_password=hash_password,
-        email=body.email
-
+        email=body.email,
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    # send email confirmation
-    res=await send_email([new_user.email])
-    print(res)
-    return new_user
+
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        # Send confirmation email
+        await send_email([new_user.email])
+
+        return new_user
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
 
 
+def login_user(body: LoginSchema, db: Session):
+    user = (
+        db.query(UserModel)
+        .filter(UserModel.username == body.username)
+        .first()
+    )
 
-def longin_user(body:LoginSchema,db:Session):
-    user=db.query(UserModel).filter(UserModel.username==body.username).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you enetered wrong usernmae")
-    
-    if not verify_password(body.password,user.hash_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you enetered wrong usernmae")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
 
-    exp_time=datetime.now()+timedelta(minutes=40)
-#  tip for future expansion of this project 
-# here we we encoding the token with user id we can alos ecode this using user roles 
-# so while decoding we can find out which type user has logged in admin,regular use,customer etc
-# and authentic them accordingly
-    token=jwt.encode({"_id":user.id,"exp":exp_time.timestamp()},settings.SECRET_KEY,settings.ALGORITHM)
+    if not verify_password(body.password, user.hash_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
 
-    return {"token":token}
+    exp_time = datetime.utcnow() + timedelta(minutes=EXP_TIME)
 
+    token = jwt.encode(
+        {
+            "_id": user.id,
+            "exp": exp_time,
+        },
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
 
-
-def is_authenticated(request:Request,db:Session):
-        try: 
-            token=request.headers.get("authorization")
-            if not token:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="youuu are unuuthhorized")
-
-            token=token.split(" ")[-1]
-
-            data=jwt.decode(token,settings.SECRET_KEY,settings.ALGORITHM)
-            user_id=data.get("_id")
-            user=db.query(UserModel).filter(UserModel.id==user_id).first()
-            if not user:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you are unuuthhorized")
-
-            return user
-        except InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="youu are unuuthhorized")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+    }
 
 
-def get_all_users(db:Session):
-    users=db.query(UserModel).all()
-    return users
+def is_authenticated(request: Request, db: Session):
+    try:
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authorization header missing",
+            )
+
+        parts = auth_header.split()
+
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authorization header",
+            )
+
+        token = parts[1]
+
+        data = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+
+        user_id = data.get("_id")
+
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload",
+            )
+
+        user = (
+            db.query(UserModel)
+            .filter(UserModel.id == user_id)
+            .first()
+        )
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+
+        return user
+
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+        )
+
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+
+
+def get_all_users(db: Session):
+    return db.query(UserModel).all()
