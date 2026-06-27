@@ -1,7 +1,7 @@
 from src.user.dtos import UserSchema, LoginSchema
 from sqlalchemy.orm import Session
 from src.user.models import UserModel
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status, Request,BackgroundTasks
 from pwdlib import PasswordHash
 import jwt
 from src.utils.settings import settings
@@ -21,7 +21,7 @@ def verify_password(plain_password: str, hashed_password: str):
     return password_hash.verify(plain_password, hashed_password)
 
 
-async def register(body: UserSchema, db: Session):
+async def register(body: UserSchema,bg_task:BackgroundTasks ,db: Session):
     # Check username
     is_user = (
         db.query(UserModel)
@@ -63,8 +63,8 @@ async def register(body: UserSchema, db: Session):
         db.refresh(new_user)
 
         # Send confirmation email
-        await send_email([new_user.email])
-
+        # await send_email([new_user.email])
+        bg_task.add_task(send_email,[new_user.email])
         return new_user
 
     except Exception as e:
